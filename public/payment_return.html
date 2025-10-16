@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Payment Status — TintaPrintingFYP</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --muted: #6c757d;
+      --success: #28a745;
+      --pending: #ffb020;
+      --fail: #dc3545;
+    }
+    html,body {
+      height:100%;
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#eef3fb, #f8fbff);
+      color: #222;
+    }
+    .wrap {
+      min-height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+      box-sizing:border-box;
+    }
+    .card {
+      width:100%;
+      max-width:760px;
+      background:var(--card);
+      border-radius:14px;
+      padding:34px;
+      box-shadow: 0 12px 40px rgba(22, 40, 61, 0.08);
+      text-align:center;
+    }
+    .status {
+      font-size:28px;
+      font-weight:700;
+      margin:8px 0 6px;
+    }
+    .sub {
+      color:var(--muted);
+      margin-bottom:18px;
+    }
+    .bill {
+      display:inline-block;
+      background:#f1f6ff;
+      color:#0b63ff;
+      padding:8px 12px;
+      border-radius:8px;
+      margin-bottom:10px;
+      font-weight:600;
+    }
+
+    .cta {
+      margin-top:22px;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .btn {
+      padding:10px 18px;
+      border-radius:10px;
+      border:0;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn-open { background:var(--success); color:white; }
+    .btn-back  { background:#eef2ff; color:#0b63ff; }
+    .small { font-size:13px; color:var(--muted); margin-top:18px; }
+
+    .loader {
+      width:60px; height:60px; border-radius:50%;
+      border:6px solid rgba(0,0,0,0.06);
+      border-top-color:#0b63ff;
+      animation:spin 1s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="card">
+      <div class="loader" id="loader" style="display:none"></div>
+      <div id="content">
+        <div id="statusText" class="status">Loading...</div>
+        <div id="subText" class="sub">Checking payment result…</div>
+        <div id="billCode" class="bill">Bill: N/A</div>
+
+        <div class="cta" id="cta">
+          <button id="openAppBtn" class="btn btn-open" style="display:none">Open in App</button>
+          <a id="openFallback" class="btn btn-back" style="text-decoration:none;display:none">Return to Website</a>
+        </div>
+
+        <div class="small" id="smallText">If your app doesn't open automatically, use the button above.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Config: change this to your app deep link scheme if different
+    const APP_DEEP_LINK_BASE = "tintaprinting://payment-return"; // example: tintaprinting://payment-return?status=1&bill=XYZ
+
+    // helpers to read query params
+    const params = new URLSearchParams(window.location.search);
+    const statusId = params.get('status_id') || params.get('status') || '';
+    const billCode = params.get('billcode') || params.get('billCode') || params.get('bill') || '';
+
+    const statusEl = document.getElementById('statusText');
+    const subEl = document.getElementById('subText');
+    const billEl = document.getElementById('billCode');
+    const openBtn = document.getElementById('openAppBtn');
+    const fallback = document.getElementById('openFallback');
+    const loader = document.getElementById('loader');
+
+    function isMobile() {
+      return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    let label = "Unknown";
+    let color = "#6c757d";
+
+    if (statusId === "1" || statusId === "success") {
+      label = "Payment Successful ✅";
+      color = "#28a745";
+      subEl.textContent = "Thank you — your payment has been received.";
+    } else if (statusId === "2" || statusId === "pending") {
+      label = "Payment Pending ⏳";
+      color = "#ffb020";
+      subEl.textContent = "Your payment is being verified. Please wait a moment.";
+    } else if (statusId === "3" || statusId === "failed") {
+      label = "Payment Failed ❌";
+      color = "#dc3545";
+      subEl.textContent = "Payment did not complete. You may retry or contact support.";
+    } else {
+      label = "Payment Status Unknown";
+      color = "#6c757d";
+      subEl.textContent = "No valid status was received.";
+    }
+
+    statusEl.textContent = label;
+    statusEl.style.color = color;
+    billEl.textContent = "Bill: " + (billCode || "N/A");
+
+    // Build deep link with params to open inside the app
+    const deepLink = APP_DEEP_LINK_BASE + "?status=" + encodeURIComponent(statusId || "") + "&bill=" + encodeURIComponent(billCode || "");
+
+    // Show UI elements
+    openBtn.style.display = "inline-block";
+    openBtn.onclick = () => { window.location.href = deepLink; };
+
+    // fallback to website (home) — set to your real website if you have one
+    fallback.style.display = "inline-block";
+    fallback.href = "/";
+    fallback.onclick = () => true;
+
+    // Auto-redirect behavior:
+    // - If on mobile, wait 2s then attempt to open app via deep link (user agent detection)
+    // - If desktop, do not auto-redirect; show button instead
+    if (isMobile()) {
+      loader.style.display = "block";
+      document.getElementById('content').style.opacity = "0.95";
+      // small pause to let user read
+      setTimeout(() => {
+        // attempt deep link
+        window.location.href = deepLink;
+        // still show button in case redirect fails
+        loader.style.display = "none";
+      }, 2000);
+    } else {
+      // desktop: no auto redirect
+      loader.style.display = "none";
+    }
+  </script>
+</body>
+</html>
