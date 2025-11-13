@@ -1,0 +1,51 @@
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.env
+.env.*
+serviceAccountKey.json
+FIREBASE_SERVICE_ACCOUNT.json
+
+.DS_Store
+Thumbs.db
+
+logs/
+*.log
+callback_log.txt
+
+dist/
+build/
+
+# Server
+PORT=3000
+NODE_ENV=production
+BACKEND_URL=https://tintaprintingfyp-backend.onrender.com
+NODE_VERSION=25
+
+# Firebase (Realtime Database)
+FIREBASE_DATABASE_URL=https://tintaprintingfyp-default-rtdb.asia-southeast1.firebasedatabase.app
+# Convert your serviceAccountKey.json to a single line (PowerShell example):
+#   Get-Content serviceAccountKey.json -Raw | ConvertTo-Json -Compress
+FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"tintaprintingfyp","private_key_id":"REPLACE_PRIVATE_KEY_ID","private_key":"-----BEGIN PRIVATE KEY-----\nREPLACE_PRIVATE_KEY_BODY\n-----END PRIVATE KEY-----\n","client_email":"firebase-adminsdk@tintaprintingfyp.iam.gserviceaccount.com","client_id":"REPLACE_CLIENT_ID","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk%40tintaprintingfyp.iam.gserviceaccount.com"}
+
+# Frontends
+ADMIN_DASHBOARD_URL=http://localhost/web-admin/
+ANDROID_APP_DEEP_LINK=tintaprinting://payment
+
+# ToyyibPay mode switch (sandbox | production)
+TOYYIBPAY_MODE=sandbox
+
+# Shared fallback (optional – used if mode-specific keys missing)
+TOYYIBPAY_SECRET_KEY=REPLACE_SHARED_SECRET_KEY   # optional
+TOYYIBPAY_CATEGORY_CODE=REPLACE_SHARED_CATEGORY  # optional
+
+# Sandbox credentials
+TOYYIBPAY_SECRET_KEY_SANDBOX=REPLACE_SANDBOX_SECRET_KEY
+TOYYIBPAY_CATEGORY_CODE_SANDBOX=REPLACE_SANDBOX_CATEGORY_CODE
+
+# Production credentials
+TOYYIBPAY_SECRET_KEY_PROD=REPLACE_PRODUCTION_SECRET_KEY
+TOYYIBPAY_CATEGORY_CODE_PROD=REPLACE_PRODUCTION_CATEGORY_CODE
+

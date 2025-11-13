@@ -10,7 +10,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -20,7 +19,6 @@
             justify-content: center;
             padding: 20px;
         }
-
         .container {
             background: white;
             border-radius: 20px;
@@ -31,7 +29,6 @@
             text-align: center;
             animation: slideUp 0.5s ease-out;
         }
-
         @keyframes slideUp {
             from {
                 opacity: 0;
@@ -42,13 +39,11 @@
                 transform: translateY(0);
             }
         }
-
         .icon {
             font-size: 80px;
             margin-bottom: 20px;
             animation: scaleIn 0.6s ease-out;
         }
-
         @keyframes scaleIn {
             from {
                 transform: scale(0);
@@ -57,36 +52,29 @@
                 transform: scale(1);
             }
         }
-
         .success-icon {
             color: #10b981;
         }
-
         .fail-icon {
             color: #ef4444;
         }
-
         h1 {
             font-size: 28px;
             margin-bottom: 10px;
             color: #1f2937;
         }
-
         .success-title {
             color: #10b981;
         }
-
         .fail-title {
             color: #ef4444;
         }
-
         .message {
             font-size: 16px;
             color: #6b7280;
             margin-bottom: 30px;
             line-height: 1.5;
         }
-
         .info-card {
             background: #f9fafb;
             border-radius: 12px;
@@ -94,7 +82,6 @@
             margin-bottom: 30px;
             text-align: left;
         }
-
         .info-row {
             display: flex;
             justify-content: space-between;
@@ -102,24 +89,20 @@
             padding: 12px 0;
             border-bottom: 1px solid #e5e7eb;
         }
-
         .info-row:last-child {
             border-bottom: none;
         }
-
         .info-label {
             font-weight: 600;
             color: #374151;
             font-size: 14px;
         }
-
         .info-value {
             color: #6b7280;
             font-size: 14px;
             font-family: 'Courier New', monospace;
             word-break: break-all;
         }
-
         .btn {
             display: inline-block;
             width: 100%;
@@ -135,27 +118,22 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
-
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
-
         .btn:active {
             transform: translateY(0);
         }
-
         .countdown {
             margin-top: 20px;
             font-size: 14px;
             color: #9ca3af;
         }
-
         .countdown-time {
             font-weight: 600;
             color: #667eea;
         }
-
         .status-badge {
             display: inline-block;
             padding: 6px 16px;
@@ -164,30 +142,24 @@
             font-weight: 600;
             margin-bottom: 20px;
         }
-
         .badge-success {
             background: #d1fae5;
             color: #065f46;
         }
-
         .badge-fail {
             background: #fee2e2;
             color: #991b1b;
         }
-
         @media (max-width: 480px) {
             .container {
                 padding: 30px 20px;
             }
-
             h1 {
                 font-size: 24px;
             }
-
             .icon {
                 font-size: 64px;
             }
-
             .btn {
                 font-size: 16px;
                 padding: 14px 28px;
@@ -201,25 +173,52 @@
         <div id="statusBadge" class="status-badge"></div>
         <h1 id="statusTitle"></h1>
         <p id="statusMessage" class="message"></p>
-
-        <div class="info-card">
+        <!-- Payment Summary Section (Invoice-like) -->
+        <div class="info-card" id="paymentSummaryCard" style="display: none;">
+            <div style="font-weight: 600; color: #374151; margin-bottom: 16px; font-size: 16px;">📄 Payment Summary</div>
+            <div class="info-row">
+                <span class="info-label">Order ID</span>
+                <span class="info-value" id="orderId">-</span>
+            </div>
             <div class="info-row">
                 <span class="info-label">Bill Code</span>
                 <span class="info-value" id="billcode">-</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Status ID</span>
-                <span class="info-value" id="statusId">-</span>
+                <span class="info-label">Transaction ID</span>
+                <span class="info-value" id="transactionId">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Payment Status</span>
+                <span class="info-value" id="paymentStatus">-</span>
             </div>
         </div>
-
+        
+        <!-- Customer Details Section -->
+        <div class="info-card" id="customerDetailsCard" style="display: none; margin-top: 16px;">
+            <div style="font-weight: 600; color: #374151; margin-bottom: 16px; font-size: 16px;">👤 Customer Details</div>
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value" id="customerEmail">-</span>
+            </div>
+        </div>
+        
+        <!-- Basic Info Card (for failed payments) -->
+        <div class="info-card" id="basicInfoCard">
+            <div class="info-row">
+                <span class="info-label">Bill Code</span>
+                <span class="info-value" id="billcodeBasic">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-value" id="statusIdBasic">-</span>
+            </div>
+        </div>
         <a href="#" id="returnBtn" class="btn">Return to App</a>
-
         <div class="countdown">
             Redirecting automatically in <span class="countdown-time" id="countdown">5</span> seconds...
         </div>
     </div>
-
     <script>
         // Get URL parameters
         function getUrlParameter(name) {
@@ -227,23 +226,34 @@
             return urlParams.get(name);
         }
 
-        // Get status_id and billcode from URL
+        // Get URL parameters
         const statusId = getUrlParameter('status_id') || '0';
         const billcode = getUrlParameter('billcode') || 'N/A';
+        const transactionId = getUrlParameter('transaction_id') || 'N/A';
+        const orderId = getUrlParameter('order_id') || 'N/A';
 
-        // Build deep link
-        const deepLink = `tintaprintingfyp://payment?status_id=${statusId}&billcode=${billcode}`;
+        // Build deep link - include all payment details for proper tracking
+        let deepLink = `tintaprintingfyp://payment?status_id=${statusId}&billcode=${billcode}`;
+        if (transactionId !== 'N/A') {
+            deepLink += `&transaction_id=${transactionId}`;
+        }
+        if (orderId !== 'N/A') {
+            deepLink += `&order_id=${orderId}`;
+        }
+        deepLink += `&redirect=orders`;
 
         // Update UI based on status
         const isSuccess = statusId === '1';
-
         const statusIcon = document.getElementById('statusIcon');
         const statusBadge = document.getElementById('statusBadge');
         const statusTitle = document.getElementById('statusTitle');
         const statusMessage = document.getElementById('statusMessage');
-        const billcodeElement = document.getElementById('billcode');
-        const statusIdElement = document.getElementById('statusId');
         const returnBtn = document.getElementById('returnBtn');
+        
+        // Get card elements
+        const paymentSummaryCard = document.getElementById('paymentSummaryCard');
+        const customerDetailsCard = document.getElementById('customerDetailsCard');
+        const basicInfoCard = document.getElementById('basicInfoCard');
 
         if (isSuccess) {
             statusIcon.innerHTML = '✅';
@@ -253,6 +263,18 @@
             statusTitle.textContent = 'Payment Successful';
             statusTitle.classList.add('success-title');
             statusMessage.textContent = 'Your payment has been processed successfully. Thank you for your order!';
+            
+            // Show invoice-like details for successful payment
+            paymentSummaryCard.style.display = 'block';
+            customerDetailsCard.style.display = 'block';
+            basicInfoCard.style.display = 'none';
+            
+            // Populate invoice details
+            document.getElementById('orderId').textContent = orderId !== 'N/A' ? orderId : 'Processing...';
+            document.getElementById('billcode').textContent = billcode;
+            document.getElementById('transactionId').textContent = transactionId !== 'N/A' ? transactionId : 'Processing...';
+            document.getElementById('paymentStatus').textContent = 'PAID';
+            document.getElementById('customerEmail').textContent = 'Check app for details';
         } else {
             statusIcon.innerHTML = '❌';
             statusIcon.classList.add('fail-icon');
@@ -261,20 +283,24 @@
             statusTitle.textContent = 'Payment Failed';
             statusTitle.classList.add('fail-title');
             statusMessage.textContent = 'Unfortunately, your payment could not be processed. Please try again or contact support.';
+            
+            // Show basic info for failed payment
+            paymentSummaryCard.style.display = 'none';
+            customerDetailsCard.style.display = 'none';
+            basicInfoCard.style.display = 'block';
+            
+            document.getElementById('billcodeBasic').textContent = billcode;
+            document.getElementById('statusIdBasic').textContent = statusId;
         }
 
-        billcodeElement.textContent = billcode;
-        statusIdElement.textContent = statusId;
         returnBtn.href = deepLink;
 
         // Countdown timer
         let countdown = 5;
         const countdownElement = document.getElementById('countdown');
-
         const countdownInterval = setInterval(() => {
             countdown--;
             countdownElement.textContent = countdown;
-
             if (countdown <= 0) {
                 clearInterval(countdownInterval);
                 // Redirect to app
