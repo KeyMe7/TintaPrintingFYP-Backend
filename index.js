@@ -121,6 +121,15 @@ if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
 }
 
+const paymentReturnPage = path.join(publicDir, 'payment_return.html');
+app.get('/payment/return', (req, res) => {
+  if (fs.existsSync(paymentReturnPage)) {
+    res.sendFile(paymentReturnPage);
+  } else {
+    res.status(404).send('Payment return page not found');
+  }
+});
+
 // -----------------------------------------------------------------------------
 // Helper utilities
 // -----------------------------------------------------------------------------
