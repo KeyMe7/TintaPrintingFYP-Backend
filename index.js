@@ -275,8 +275,17 @@ async function saveUnmatchedPayment(paymentData) {
   }
   const paymentId = paymentData.transaction_id || paymentData.billcode || `UNMATCHED-${Date.now()}`;
   const ref = db.ref(`payments_unmatched/${paymentId}`);
+  
+  // Remove undefined values (Firebase doesn't allow them)
+  const cleanData = {};
+  Object.keys(paymentData).forEach(key => {
+    if (paymentData[key] !== undefined && paymentData[key] !== null) {
+      cleanData[key] = paymentData[key];
+    }
+  });
+  
   await ref.set({
-    ...paymentData,
+    ...cleanData,
     storedAt: new Date().toISOString()
   });
   console.log(`⚠️ Stored unmatched payment payload under payments_unmatched/${paymentId}`);
@@ -360,25 +369,69 @@ app.post('/payment/callback', async (req, res) => {
     let orderId = order?.id || null;
     let userId = order?.userId || order?.userID || order?.customerId || null;
 
-    if (!orderId && paymentData.order_id && paymentData.order_id.startsWith('ORD')) {
-      orderId = paymentData.order_id;
-      console.log(`ℹ️ Using order ID from payload: ${orderId}`);
-      if (!userId) {
-        const orderRef = db.ref(`orders/${orderId}`);
-        const orderSnapshot = await orderRef.once('value');
-        if (orderSnapshot.exists()) {
-          userId = orderSnapshot.val().userId || orderSnapshot.val().customerId || null;
+    // If we don't have order yet, try to get it from order_id in payload
+    if (!orderId && paymentData.order_id) {
+      const potentialOrderId = paymentData.order_id.toString().trim();
+      if (potentialOrderId.startsWith('ORD') || potentialOrderId.length > 10) {
+        orderId = potentialOrderId;
+        console.log(`ℹ️ Using order ID from payload: ${orderId}`);
+        
+        // Try to fetch the order to get userId
+        try {
+          const orderRef = db.ref(`orders/${orderId}`);
+          const orderSnapshot = await orderRef.once('value');
+          if (orderSnapshot.exists()) {
+            const orderData = orderSnapshot.val();
+            userId = orderData.userId || orderData.userID || orderData.customerId || orderData.customerID || null;
+            console.log(`✅ Found order ${orderId}, userId: ${userId || 'NOT FOUND'}`);
+            
+            // Also check if billcode matches or needs to be updated
+            if (!orderData.billcode && !orderData.billCode) {
+              console.log(`ℹ️ Updating order ${orderId} with billcode ${billcode}`);
+              await orderRef.update({
+                billcode: billcode,
+                billCode: billcode
+              });
+            }
+          } else {
+            console.warn(`⚠️ Order ${orderId} not found in database`);
+          }
+        } catch (fetchError) {
+          console.error(`❌ Error fetching order ${orderId}:`, fetchError);
         }
       }
     }
 
-    if (!orderId || !userId) {
-      console.warn('⚠️ Unable to resolve order or user for payment. Saving to unmatched queue.');
-      await saveUnmatchedPayment({ ...paymentData, note: 'Order not resolved' });
+    // Final check - if we still don't have userId, try to extract from order if we have orderId
+    if (orderId && !userId) {
+      console.warn(`⚠️ Order ${orderId} found but userId is missing. Attempting to save payment anyway...`);
+      // We'll try to save with a placeholder and log it
+    }
+
+    if (!orderId) {
+      console.warn('⚠️ Unable to resolve order ID. Saving to unmatched queue.');
+      await saveUnmatchedPayment({ ...paymentData, note: 'Order ID not resolved' });
       return res.status(200).json({
         received: true,
         saved: false,
-        warning: 'Order not resolved. Payment stored in payments_unmatched.'
+        warning: 'Order ID not resolved. Payment stored in payments_unmatched.'
+      });
+    }
+
+    // If we have orderId but no userId, try one more time to get it or use a fallback
+    if (!userId) {
+      console.warn(`⚠️ userId is missing for order ${orderId}. Checking if we can proceed...`);
+      // Try to get userId from users node if we have customer email or other identifier
+      // For now, we'll save to unmatched but with orderId reference
+      await saveUnmatchedPayment({ 
+        ...paymentData, 
+        orderId: orderId,
+        note: 'Order found but userId missing' 
+      });
+      return res.status(200).json({
+        received: true,
+        saved: false,
+        warning: `Order ${orderId} found but userId is missing. Payment stored in payments_unmatched with order reference.`
       });
     }
 
